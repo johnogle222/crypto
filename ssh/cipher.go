@@ -15,6 +15,8 @@ import (
 	"hash"
 	"io"
 	"io/ioutil"
+
+	"github.com/johnogle222/crypto/twofish"
 )
 
 const (
@@ -118,6 +120,8 @@ var cipherModes = map[string]*streamCipherMode{
 	// insecure cipher, see http://www.isg.rhul.ac.uk/~kp/SandPfinal.pdf
 	// uncomment below to enable it.
 	// aes128cbcID: {16, aes.BlockSize, 0, nil},
+
+	"twofish-cbc": {32, twofish.BlockSize, 0, nil},
 }
 
 // prefixLen is the length of the packet prefix that contains the packet length
@@ -365,12 +369,7 @@ type cbcCipher struct {
 	oracleCamouflage uint32
 }
 
-func newAESCBCCipher(iv, key, macKey []byte, algs directionAlgorithms) (packetCipher, error) {
-	c, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
-
+func newCBCCipher(c cipher.Block, iv, key, macKey []byte, algs directionAlgorithms) (packetCipher, error) {
 	cbc := &cbcCipher{
 		mac:        macModes[algs.MAC].new(macKey),
 		decrypter:  cipher.NewCBCDecrypter(c, iv),
@@ -382,6 +381,24 @@ func newAESCBCCipher(iv, key, macKey []byte, algs directionAlgorithms) (packetCi
 	}
 
 	return cbc, nil
+}
+
+func newTwoFishCBCCipher(iv, key, macKey []byte, algs directionAlgorithms) (packetCipher, error) {
+	c, err := twofish.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	return newCBCCipher(c, iv, key, macKey, algs)
+}
+
+func newAESCBCCipher(iv, key, macKey []byte, algs directionAlgorithms) (packetCipher, error) {
+	c, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	return newCBCCipher(c, iv, key, macKey, algs)
 }
 
 func maxUInt32(a, b int) uint32 {

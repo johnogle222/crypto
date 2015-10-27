@@ -27,7 +27,7 @@ const (
 var supportedCiphers = []string{
 	"aes128-ctr", "aes192-ctr", "aes256-ctr",
 	"aes128-gcm@openssh.com",
-	"arcfour256", "arcfour128",
+	"arcfour256", "arcfour128", "twofish-cbc",
 }
 
 // supportedKexAlgos specifies the supported key-exchange algorithms in
